@@ -10,6 +10,7 @@ import com.hmdp.service.IShopService;
 import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.SystemConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
@@ -36,6 +37,7 @@ import static com.hmdp.utils.RedisConstants.*;
  * @since 2021-12-22
  */
 @Service
+@Slf4j
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -203,6 +205,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Override
     public Result queryShopByType(Integer typeId, Integer current, Double x, Double y) {
+
+        //todo 待修改，暂时不需要启动左边查询，否则会出现问题
+        x=null;
+        y=null;
+        log.info("typeId = "+typeId +" current = "+current+" x = "+x  +" y = "+y);
         //判断是否需要坐标查询
         if (x == null || y == null) {
             //不需要坐标查询
@@ -222,6 +229,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                         , new Distance(5000)
                         , RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end)
                 );
+
+        log.info("results = "+results.toString());
         //解析出id
         if (results==null){
             return Result.ok(Collections.emptyList());
@@ -244,6 +253,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         });
         //根据id查询shop
         String join = StrUtil.join(",", ids);
+
+        log.info("join = "+join);
+        log.info("ids = "+ids);
         List<Shop> shopList = lambdaQuery().in(Shop::getId, ids).last("order by field(id,"+join+")").list();
         for (Shop shop : shopList) {
             shop.setDistance(distanceMap.get(shop.getId().toString()).getValue());

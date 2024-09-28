@@ -61,10 +61,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     //    private static final BlockingQueue<VoucherOrder> orderTasks=new ArrayBlockingQueue<>(1024*1024);
     private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
 
+    //初始化时启动线程处理订单
     @PostConstruct
     private void init() {
         SECKILL_ORDER_EXECUTOR.submit(() -> {
-            String queueName="stream.orders";
+            String queueName="stream.orders"; // Redis消息队列名称
             while (true) {
                 try {
                     //从消息队列中获取订单信息
@@ -94,6 +95,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         });
     }
 
+
+    /**
+     * 处理未确认的消息（挂起列表中的消息）
+     */
     private void handlePendingList() {
         String queueName="stream.orders";
         while (true){

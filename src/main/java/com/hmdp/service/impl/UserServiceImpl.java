@@ -110,6 +110,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok(token);
     }
 
+
+    private User createUserWithPhone(String phone) {
+        User user = new User();
+        user.setPhone(phone);
+        //生成随机昵称
+        user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
+        baseMapper.insert(user);
+        return user;
+    }
+
+
+    /**
+     * 签到功能
+     * 获取当前登录用户：从 UserHolder 获取当前登录用户的 ID。
+     * 记录签到信息：根据当前日期和用户 ID，生成 Redis 键并使用 setBit 方法标记用户在当月某天是否签到。
+     * @return
+     */
     @Override
     public Result sign() {
         //获取当前登陆用户
@@ -126,6 +143,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok();
     }
 
+    /**
+     * 统计连续签到天数
+     * 获取用户签到记录：根据用户 ID 和当前日期，从 Redis 中获取到当月截至当天的签到记录，表示为二进制数据。
+     * 计算连续签到天数：通过二进制字符串从低位开始检查连续的 1（表示签到），计算出用户的连续签到天数。
+     * @return
+     */
     @Override
     public Result signCount() {
         //获取当前登陆用户
@@ -168,12 +191,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok(count);
     }
 
-    private User createUserWithPhone(String phone) {
-        User user = new User();
-        user.setPhone(phone);
-        //生成随机昵称
-        user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
-        baseMapper.insert(user);
-        return user;
-    }
+
 }
